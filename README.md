@@ -41,9 +41,9 @@ https://github.com/fcwu/docker-qdk2
 
 sudo ./InstallToUbuntu.sh install
 
-https://github.com/qnap-dev/qdk2/releases/download/v0.22/qdk2_0.22.trusty_amd64.deb
+https://github.com/qnap-dev/qdk2/releases/download/v0.23/qdk2_0.23.trusty_amd64.deb
 
-https://github.com/qnap-dev/qdk2/releases/download/v0.22/qdk2_0.22.xenial_amd64.deb
+https://github.com/qnap-dev/qdk2/releases/download/v0.23/qdk2_0.23.xenial_amd64.deb
 
 # QDK Quick Start Guide
 

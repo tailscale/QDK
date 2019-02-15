@@ -225,6 +225,7 @@ codesigning_preinstall(){
 	TOKEN=`$CMD_ECHO $ret | awk -F':' '{print $2}'`
 	echo "verify_qpkg return: $ret, status: $status, token: $TOKEN"
 	if [ "x$status" != "xsuccess" ] || [ "x$TOKEN" = "x" ]; then
+		## is it possible to be here after we have already checked cerficiate first?
 		handle_extract_error
 	fi
 }
@@ -235,6 +236,7 @@ codesigning_postinstall(){
 		local ret="$($CMD_ECHO -n "$QPKG_NAME:$TOKEN" | qsh -0e cs_qdaemon.qpkg_finish)"
 		echo "finish return: $ret"
 	else
+		## is it possible to be here after we have already checked cerficiate first?
 		handle_extract_error
 	fi
 }
@@ -247,22 +249,30 @@ codesigning_extract_data(){
 	local ret=1
 	case "$archive" in
 		*.gz|*.bz2)
-			$CMD_TAR xf "$archive" "./$codesigning_dir" 2>/dev/null || handle_extract_error
-			$CMD_MV "$codesigning_dir" "$root_dir/$codesigning_dir"
-			codesigning_preinstall
-			$CMD_TAR xvf "$archive" --exclude="$codesigning_dir" -C "$root_dir" 2>/dev/null >>$SYS_QPKG_DIR/.list
-			ret=$?
-			codesigning_postinstall
-			[ $ret = 0 ] || handle_extract_error
+			$CMD_TAR xf "$archive" "./$codesigning_dir" 2>/dev/null
+			if [ $? = 0 ]; then
+				$CMD_MV "$codesigning_dir" "$root_dir/$codesigning_dir"
+				codesigning_preinstall
+				$CMD_TAR xvf "$archive" --exclude="$codesigning_dir" -C "$root_dir" 2>/dev/null >>$SYS_QPKG_DIR/.list
+				ret=$?
+				codesigning_postinstall
+				[ $ret = 0 ] || handle_extract_error
+			else
+				$CMD_TAR xvf "$archive" -C "$root_dir" 2>/dev/null >>$SYS_QPKG_DIR/.list || handle_extract_error
+			fi
 			;;
 		*.7z)
-			$CMD_7Z x -so "$archive" 2>/dev/null | $CMD_TAR x "./$codesigning_dir" 2>/dev/null || handle_extract_error
-			$CMD_MV "$codesigning_dir" "$root_dir/$codesigning_dir"
-			codesigning_preinstall
-			$CMD_7Z x -so "$archive" 2>/dev/null | $CMD_TAR xv -C "$root_dir" --exclude="$codesigning_dir" 2>/dev/null >>$SYS_QPKG_DIR/.list
-			ret=$?
-			codesigning_postinstall
-			[ $ret = 0 ] || handle_extract_error
+			$CMD_7Z x -so "$archive" 2>/dev/null | $CMD_TAR x "./$codesigning_dir" 2>/dev/null
+			if [ $? = 0 ]; then
+				$CMD_MV "$codesigning_dir" "$root_dir/$codesigning_dir"
+				codesigning_preinstall
+				$CMD_7Z x -so "$archive" 2>/dev/null | $CMD_TAR xv -C "$root_dir" --exclude="$codesigning_dir" 2>/dev/null >>$SYS_QPKG_DIR/.list
+				ret=$?
+				codesigning_postinstall
+				[ $ret = 0 ] || handle_extract_error
+			else
+				$CMD_7Z x -so "$archive" 2>/dev/null | $CMD_TAR xv -C "$root_dir" 2>/dev/null >>$SYS_QPKG_DIR/.list || handle_extract_error
+			fi
 			;;
 		*)
 			handle_extract_error

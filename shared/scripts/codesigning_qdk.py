@@ -150,22 +150,19 @@ def sign_and_update_signature(kwargs):
        codesigning_common.update_signatures(kwargs, server_response)
        os.remove(kwargs["tgzfile"])
 
-def save_public_key(kwargs):
+def save_certificate(kwargs):
     for folder in kwargs["codesigning_folders"]:
-        pem_file_name = folder + "/" + codesigning_common.KEY_NAME
-        signature_file_name = folder + "/" + codesigning_common.KEY_SIG_NAME
+        pem_file_name = folder + "/" + codesigning_common.CERT_NAME
         db = folder + "/" + codesigning_common.DB_NAME
         conn = sqlite3.connect(db)
         cur = conn.cursor()
-        sql = "SELECT Key, Signature FROM PublicKey LIMIT 1;"
+        sql = "SELECT Cert FROM Certificate LIMIT 1;"
         cur.execute(sql)
         entry = cur.fetchone()
         pem = entry[0]
-        signature = entry[1]
         pem_file = open(pem_file_name, "w")
         pem_file.write(pem)
-        signature_file = open(signature_file_name, "w+b")
-        signature_file.write(signature)
+        pem_file.close()
 
 def sign_and_save_db_signatures(kwargs):
     for folder in kwargs["codesigning_folders"]:
@@ -192,6 +189,7 @@ def sign_and_save_db_signatures(kwargs):
         signature_file_name = folder + "/" + codesigning_common.DB_SIG_NAME
         signature_file = open(signature_file_name, "w+b")
         signature_file.write(signature)
+        signature_file.close()
 
 def print_usage():
     usage_string = """
@@ -226,5 +224,5 @@ if __name__ == "__main__":
     update_dbs_by_csv(kwargs)
     create_tgzs(kwargs)
     sign_and_update_signature(kwargs)
-    save_public_key(kwargs)
+    save_certificate(kwargs)
     sign_and_save_db_signatures(kwargs)

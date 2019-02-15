@@ -9,7 +9,7 @@ import codesigning_common
 
 # The list of patforms must be same as valid platforms in QDK
 # refer to file "qbuild" at https://github.com/qnap-dev/QDK/
-PLATFORMS=["arm-x09","arm-x19","arm-x19","arm-x41","arm_64","x86","x86_ce53xx","x86_64"]
+PLATFORMS=["arm-x09","arm-x19","arm-x31","arm-x41","arm_64","x86","x86_ce53xx","x86_64"]
 
 def check_qpkg_conf(kwargs):
     # Check if qpkg.cfg exists, and read paramaters from it

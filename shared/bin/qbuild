@@ -505,6 +505,16 @@ perform_data_package_adaptor(){
 	fi
 }
 
+# Code signing related routines
+do_code_signing(){
+	local build_dir="${1:-build.$$}"
+	msg "Creating code signing data..."
+	[ -z "$QNAP_CODE_SIGNING_CSV" ] && QNAP_CODE_SIGNING_CSV="build_sign.csv"
+	[ -z "$QNAP_CODE_SIGNING_SERVER_IP" ] && QNAP_CODE_SIGNING_SERVER_IP=$DEFAULT_QNAP_CODE_SIGNING_SERVER_IP
+	[ -z "$QNAP_CODE_SIGNING_SERVER_PORT" ] && QNAP_CODE_SIGNING_SERVER_PORT=$DEFAULT_QNAP_CODE_SIGNING_SERVER_PORT
+	python "${QDK_SCRIPTS_DIR}/codesigning_qpkg.py" cert="${QDK_SCRIPTS_DIR}/codesigning_cert.pem" cwd="`pwd`" buildpath=$build_dir csv="${QNAP_CODE_SIGNING_CSV}" server=${QNAP_CODE_SIGNING_SERVER_IP}:${QNAP_CODE_SIGNING_SERVER_PORT}  2>&1 | tee -a code_signing.log
+}
+
 # Create data package for distribution.
 create_data_package(){
 	local arch_msg="${1:+ for $1}"
@@ -528,6 +538,11 @@ create_data_package(){
 	cd build.$$
 	perform_data_package_adaptor
 	cd - > /dev/null 2>&1
+
+	find . -type d -name '.qcodesigning' | xargs rm -rf
+	if [ "x${QNAP_CODE_SIGNING}" = "x1" ]; then
+		do_code_signing
+	fi
 
 	verbose_msg "Creating compressed tar archive..."
 	case "$QDK_COMPRESS_METHOD" in
@@ -987,6 +1002,10 @@ create_qpkg(){
 	add_qpkg_tail
 	add_qpkg_encryption
 
+	if [ "x${QNAP_CODE_SIGNING}" = "x1" ]; then
+		verify_code_signing ${QDK_QPKG_FILE}
+	fi
+
 	debug_msg "Copying $QDK_QPKG_FILE to $QDK_BUILD_DIR"
 	/bin/cp -fp $QDK_QPKG_FILE $QDK_BUILD_DIR
 	/bin/chmod 644 ${QDK_BUILD_DIR}/${QDK_QPKG_FILE}
@@ -1228,15 +1247,6 @@ cleanup_after_build(){
 	call_teardown
 }
 
-# Code signing related routines
-do_code_signing(){
-	msg "Creating code signing data..."
-	[ -z "$QNAP_CODE_SIGNING_CSV" ] && QNAP_CODE_SIGNING_CSV="build_sign.csv"
-	[ -z "$QNAP_CODE_SIGNING_SERVER_IP" ] && QNAP_CODE_SIGNING_SERVER_IP=$DEFAULT_QNAP_CODE_SIGNING_SERVER_IP
-	[ -z "$QNAP_CODE_SIGNING_SERVER_PORT" ] && QNAP_CODE_SIGNING_SERVER_PORT=$DEFAULT_QNAP_CODE_SIGNING_SERVER_PORT
-	python "${QDK_SCRIPTS_DIR}/codesigning_qdk.py" cert="${QDK_SCRIPTS_DIR}/codesigning_cert.pem" cwd="`pwd`" csv="${QNAP_CODE_SIGNING_CSV}" server=${QNAP_CODE_SIGNING_SERVER_IP}:${QNAP_CODE_SIGNING_SERVER_PORT}  2>&1 | tee -a code_signing.log
-}
-
 # Main build function.
 build_qpkg(){
 	# All build operation should be run in the QDK_ROOT_DIR directory (current
@@ -1244,11 +1254,6 @@ build_qpkg(){
 	cd "${QDK_ROOT_DIR:-.}" 2>/dev/null || err_msg "$QDK_ROOT_DIR: no such directory"
 
 	initialize_build_environment
-
-	find . -type d -name '.qcodesigning' | xargs rm -rf
-	if [ "x${QNAP_CODE_SIGNING}" = "x1" ]; then
-		do_code_signing
-	fi
 
 	if [ -n "$QDK_BUILD_ARCH" ]; then
 		traverse_and_build
@@ -1610,15 +1615,15 @@ verify_code_signing(){
 	openssl cms -verify -text -in $signature_file -CAfile $ca_cert_file 2>/dev/null > $verify_dgst_file
 	/bin/cmp $dgst_file $verify_dgst_file 2>/dev/null
 	if [ $? -eq 0 ]; then
-		msg "verification successful"
+		msg "Verification successful"
 	else
 		# Verify using 3rd party CA
 		openssl cms -verify -text -in $signature_file -CAfile $ca_cert3_file 2>/dev/null > $verify_dgst_file
 		/bin/cmp $dgst_file $verify_dgst_file 2>/dev/null
 		if [ $? -eq 0 ]; then
-			msg "verification successful (3rd party qpkg)"
+			msg "Verification successful (3rd party qpkg)"
 		else
-			msg "verification failed"
+			msg "Verification failed"
 		fi
 	fi
 	/bin/rm $qpkg_data_file

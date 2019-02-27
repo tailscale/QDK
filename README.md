@@ -3,7 +3,7 @@ The project is fork qnap SDK 2.2.4
 
 # QDK Download Link:
 
-https://download.qnap.com/QPKG/QDK/QDK_2.3.5.zip
+https://download.qnap.com/QPKG/QDK/QDK_2.3.6.zip
 
 # QPKG Development Guidelines
 ----------------------------------
@@ -55,9 +55,13 @@ https://www.gitbook.com/book/edhongcy/qdk-quick-start-guide/details
 
 # Update new feature
 
+2.3.6
+
+    -Some changes for QNAP code signing and anti-tampering
+
 2.3.5
 
-    -Added qnap internal code signing and anti-tampering support.(After QTS vserion 4.4.x support code signing and anti-tampering funtion. )
+    -Added qnap internal code signing and anti-tampering support.(After QTS vserion 4.4.x support code signing and anti-tampering funtion.)
 
 2.3.4
 

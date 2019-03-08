@@ -216,9 +216,7 @@ handle_extract_error(){
 		err_log "$SYS_MSG_FILE_ERROR"
 	fi
 }
-
 TOKEN=""
-
 codesigning_preinstall(){
 	local ret="$($CMD_ECHO -n "$QPKG_NAME:$SYS_QPKG_DIR" | qsh -0e cs_qdaemon.verify_qpkg)"
 	local status=`$CMD_ECHO $ret | awk -F':' '{print $1}'`
@@ -229,7 +227,6 @@ codesigning_preinstall(){
 		handle_extract_error
 	fi
 }
-
 codesigning_postinstall(){
 	echo "codesigning_postinstall token: $TOKEN"
 	if [ "x$TOKEN" != "x" ]; then
@@ -240,7 +237,6 @@ codesigning_postinstall(){
 		handle_extract_error
 	fi
 }
-
 codesigning_extract_data(){
 	[ -n "$1" ] || return 1
 	local archive="$1"
@@ -1335,7 +1331,6 @@ main(){
 	post_install
 
 	create_uninstall_script
-
 
 	$CMD_SYNC
 

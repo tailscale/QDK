@@ -1274,7 +1274,6 @@ create_env(){
 	/bin/mkdir -m 755 -p "$qpkg_name" || err_msg "$qpkg_name: failed to create directory"
 
 	/bin/cp -pfr "${QDK_TEMPLATE_DIR}"/* "$qpkg_name"
-	find "$qpkg_name" -name .svn | xargs rm -rf
 
 	local qpkg_cfg="${qpkg_name}/qpkg.cfg"
 	edit_qpkg_config QPKG_AUTHOR "$(/usr/bin/whoami)" "$qpkg_cfg"
@@ -1301,7 +1300,7 @@ extract_qpkg(){
 	local dd_quiet=
 	local tar_quiet=
 	is_quiet && tar_quiet=">/dev/null"
-	is_verbose|| dd_quiet="2>/dev/null"
+	is_verbose || dd_quiet="2>/dev/null"
 	local extract_command="$(/bin/sed -n "1,/^exit 1/{
 s!if=\"\${0}\" \(.* -C\) .*!$dd_quiet if=$qpkg \1 $dir $tar_quiet;!p
 s!if=\"\${0}\" \(.* of.*\) ||.*!$dd_quiet if=$qpkg \1 $dd_quiet;!p

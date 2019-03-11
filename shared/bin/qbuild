@@ -1611,13 +1611,13 @@ verify_code_signing(){
 	/bin/dd if=$qpkg bs=1 skip=$code_signing_pos count=$code_signing_len 2>/dev/null > $signature_file
 
 	# Verify using non-3rd party CA
-	openssl cms -verify -text -in $signature_file -CAfile $ca_cert_file 2>/dev/null > $verify_dgst_file
+	openssl cms -verify -in $signature_file -CAfile $ca_cert_file 2>/dev/null > $verify_dgst_file
 	/bin/cmp $dgst_file $verify_dgst_file 2>/dev/null
 	if [ $? -eq 0 ]; then
 		msg "Verification successful"
 	else
 		# Verify using 3rd party CA
-		openssl cms -verify -text -in $signature_file -CAfile $ca_cert3_file 2>/dev/null > $verify_dgst_file
+		openssl cms -verify -in $signature_file -CAfile $ca_cert3_file 2>/dev/null > $verify_dgst_file
 		/bin/cmp $dgst_file $verify_dgst_file 2>/dev/null
 		if [ $? -eq 0 ]; then
 			msg "Verification successful (3rd party qpkg)"

@@ -3,7 +3,7 @@ The project is fork qnap SDK 2.2.4
 
 # QDK Download Link:
 
-https://download.qnap.com/QPKG/QDK/QDK_2.3.6.zip
+https://download.qnap.com/QPKG/QDK/QDK_2.3.7.zip
 
 # QPKG Development Guidelines
 ----------------------------------
@@ -54,6 +54,10 @@ https://github.com/qnap-dev/qdk2/releases/download/v0.23/qdk2_0.23.xenial_amd64.
 https://www.gitbook.com/book/edhongcy/qdk-quick-start-guide/details
 
 # Update new feature
+
+2.3.7
+
+    -Fix the bug that sometimes the verification will fail
 
 2.3.6
 

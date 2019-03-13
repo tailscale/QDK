@@ -7,7 +7,7 @@ if [ -d "/usr/local/QDK" ]; then
 	echo "QDK exists."
 else
 	apt-get update
-	apt-get install -y build-essential wget
+	apt-get install -y build-essential wget bsdmainutils curl
 fi
 
 case "$1" in

@@ -55,6 +55,10 @@ https://www.gitbook.com/book/edhongcy/qdk-quick-start-guide/details
 
 # Update new feature
 
+2.3.9
+
+    -Some enhabcement and bug fix for code signing
+
 2.3.8
 
     -Add build_sign.csv sample file

@@ -738,15 +738,21 @@ add_qpkg_header(){
 		fi
 		return 0
 	else
-		if [ -x "/usr/local/sbin/notify" ]; then
-			/usr/local/sbin/notify send -A A039 -C C001 -M 50 -l error -t 3 "[{0}] {1} install failed due to QTS application install volume not found." "$PREFIX" "$QPKG_DISPLAY_NAME"
-			set_progress_fail
-			exit 
+		if [ ${QDK_ALLOW_NO_VOLUME} = 1 ] && [ -d "/mnt/HDA_ROOT/update_pkg" ]; then
+			QPKG_INSTALL_PATH="/mnt/HDA_ROOT/update_pkg"
+			QPKG_DIR="\${QPKG_INSTALL_PATH}/${QPKG_NAME}"
+			_EXTRACT_DIR="/tmp/$QPKG_NAME"
 		else
-			$log_tool "[$PREFIX] Failed to install $QPKG_DISPLAY_NAME. The selected installation volume is missing."
-			set_progress_fail
+			if [ -x "/usr/local/sbin/notify" ]; then
+				/usr/local/sbin/notify send -A A039 -C C001 -M 50 -l error -t 3 "[{0}] {1} install failed due to QTS application install volume not found." "$PREFIX" "$QPKG_DISPLAY_NAME"
+				set_progress_fail
+				exit 
+			else
+				$log_tool "[$PREFIX] Failed to install $QPKG_DISPLAY_NAME. The selected installation volume is missing."
+				set_progress_fail
+			fi
+			exit
 		fi
-		exit
 	fi
 	}
 	EOF
@@ -792,7 +798,7 @@ add_qpkg_header(){
 
 	/bin/cat >>$QDK_QPKG_FILE <<-EOF
 	find_base
-	_EXTRACT_DIR="\$QPKG_INSTALL_PATH/.tmp"
+	[ -z "\$_EXTRACT_DIR" ] && _EXTRACT_DIR="\$QPKG_INSTALL_PATH/.tmp"
 	/bin/mkdir -p \$_EXTRACT_DIR || exit 1
 	script_len=SCRIPT_LEN
 	/bin/dd if="\${0}" bs=\$script_len skip=1 | /bin/tar -xO | /bin/tar -xzv -C \$_EXTRACT_DIR || exit 1
@@ -1654,6 +1660,7 @@ usage: $(/usr/bin/basename $0) [--extract QPKG [DIR]] [--create-env NAME] [-s|--
 	[--query OPTION QPKG] [-v|--verbose] [-q|--quiet] [--strict]
 	[--add-code-signing QPKG] [--verify-code-signing QPKG]
 	[--code-signing-cfg CODE_SIGNING_CFG]
+	[--allow-no-volume]
 	[-?|-h|--help] [--usage] [-V|--version]
 EOF
 	exit 0
@@ -1671,6 +1678,7 @@ usage: $(/usr/bin/basename $0) [--extract QPKG [DIR]] [--create-env NAME] [-s|--
 	[--list-keys] [--query OPTION QPKG] [-v|--verbose] [-q|--quiet] [--strict]
 	[--add-code-signing QPKG] [--verify-code-signing QPKG]
 	[--code-signing-cfg CODE_SIGNING_CFG]
+	[--allow-no-volume]
 	[-?|-h|--help] [--usage] [-V|--version]
 
 -s
@@ -1772,7 +1780,8 @@ usage: $(/usr/bin/basename $0) [--extract QPKG [DIR]] [--create-env NAME] [-s|--
 --code-signing-cfg CODE_SIGNING_CFG
 	The configuration file for --add-code-signing and --verify-code-signing
 	(This option is internal use only)
-
+--allow-no-volume
+        Allow qpkg install without volume. The default path is /mnt/HDA_ROOT/update_pkg when the volume can not be found.
 -?
 -h
 --help
@@ -1806,6 +1815,8 @@ main(){
 	QDK_CONTROL_FILE="${QDK_CONTROL_FILE:-control.tar}"
 	QDK_COMPRESS_FILE="${QDK_COMPRESS_FILE:-data.tar.gz}"
 	QDK_GPG_PUBKEYRING="${QDK_GPG_PUBKEYRING:-/etc/config/qpkg.gpg}"
+
+	QDK_ALLOW_NO_VOLUME=0
 
 	[ -n "$QDK_GPG_KEYPATH" ] && export GNUPGHOME="$QDK_GPG_KEYPATH"
 
@@ -1958,6 +1969,8 @@ main(){
 				[ -n "$qbuild_code_signing_cfg_file" ] || err_msg "--code-signing-cfg: no cfg file"
 				shift
 				;;
+			--allow-no-volume) QDK_ALLOW_NO_VOLUME=1
+                ;;
 			-*)		qbuild_usage=TRUE ;;
 		esac
 		shift

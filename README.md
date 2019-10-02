@@ -39,7 +39,7 @@ https://github.com/fcwu/docker-qdk2
 
 https://github.com/qeek-dev/create-dpkg
 
-# How to install QDK in Ubuntu
+# How to install QDK on Ubuntu
 
 ```
 sudo ./InstallToUbuntu.sh install

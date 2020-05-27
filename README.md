@@ -3,7 +3,7 @@ The project is fork qnap SDK 2.2.4
 
 # QDK Download Link:
 
-https://download.qnap.com/QPKG/QDK/QDK_2.3.11.zip
+https://github.com/qnap-dev/QDK/releases/download/v2.3.11/QDK_2.3.11.zip
 
 # QPKG Development Guidelines
 ----------------------------------

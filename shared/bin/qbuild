@@ -527,7 +527,7 @@ do_code_signing(){
 		QNAP_CODE_SIGNING_SERVER_PORT="5001"
 	fi
 	$CS_PYTHON "${QDK_SCRIPTS_DIR}/codesigning_qpkg.py" cwd="`pwd`" buildpath=$build_dir csv="${QNAP_CODE_SIGNING_CSV}" server=${QNAP_CODE_SIGNING_SERVER_IP}:${QNAP_CODE_SIGNING_SERVER_PORT} 2>&1 | tee -a code_signing.log
-	if [ $? != 0 ]; then
+	if [ ${PIPESTATUS[0]} != 0 ]; then
 		err_msg "$QPKG_NAME: Failed to add anti-tamper support"
 	fi
 }

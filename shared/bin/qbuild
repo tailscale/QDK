@@ -46,8 +46,10 @@ fi
 # Cleanup any temporary directories and files at termination.
 trap 'cleanup_all' INT TERM
 
-if [ $IS_NAS -eq "TRUE" ]; then
-    QDK_PATH="${QDK_PATH:-$(dirname "$(dirname "$(busybox readlink -f "$0")")")}"
+if [ $IS_NAS = "TRUE" ]; then
+    CONF=/etc/config/qpkg.conf
+    QPKG_NAME=qdk
+    QDK_PATH=$(/sbin/getcfg $QPKG_NAME Install_Path -d "" -f $CONF)
 else
     QDK_PATH="${QDK_PATH:-$(dirname "$(dirname "$(readlink -f "$0")")")}"
 fi
@@ -596,7 +598,7 @@ create_data_package(){
 		xz)
 			QDK_COMPRESS_FILE=data.tar.xz
 			debug_msg "[$QDK_COMPRESS_FILE]"
-                        if [ $IS_NAS -eq "TRUE" ]; then
+                        if [ $IS_NAS = "TRUE" ]; then
                             debug_msg "$(tar cf - -C build.$$ . | xz > tmp.$$/${QDK_COMPRESS_FILE})"
                         else
 			    local SIZE=$(du -sb "${BUILD_DIR}" | grep -o '^[0-9]\+')
@@ -626,8 +628,8 @@ create_control_package(){
 	fi
 	# xz utility
 	if [ "$QDK_COMPRESS_METHOD" == "xz" ]; then
-            if [ $IS_NAS -eq "TRUE" ]; then
-		/bin/cp $(dirname $(dirname $(busybox realpath $0)))/xz_1404_${QDK_XZ_ARCH}.tgz build.$$/xz.tgz
+            if [ $IS_NAS = "TRUE" ]; then
+		/bin/cp $QDK_PATH/xz_1404_${QDK_XZ_ARCH}.tgz build.$$/xz.tgz
             else
 		/bin/cp $(dirname $(dirname $(realpath $0)))/xz_1404_${QDK_XZ_ARCH}.tgz build.$$/xz.tgz
             fi
@@ -2285,12 +2287,16 @@ main(){
 
 # System-wide definitions
 
-if [ -f "${QDK_PATH}/qdk.conf" ]; then
-    QDK_CONF_FILE="${QDK_PATH}/qdk.conf"
-elif [ -f "./qdk.conf" ]; then
-		QDK_CONF_FILE="./qdk.conf"
+if [ -f "/etc/config/qdk.conf" ]; then
+    QDK_CONF_FILE="/etc/config/qdk.conf"
 else
-    err_msg "qdk.conf: not found"
+    if [ -f "${QDK_PATH}/qdk.conf" ]; then
+        QDK_CONF_FILE="${QDK_PATH}/qdk.conf"
+    elif [ -f "./qdk.conf" ]; then
+        QDK_CONF_FILE="./qdk.conf"
+    else
+        err_msg "qdk.conf: not found"
+    fi
 fi
 
 . ${QDK_CONF_FILE}

@@ -37,9 +37,22 @@ if [ ! -e "$CS_PYTHON" ]; then
 CS_PYTHON="/usr/local/bin/python2"
 fi
 
+if [ -f "/etc/config/uLinux.conf" ]; then
+    IS_NAS="TRUE"
+else
+    IS_NAS="FALSE"
+fi
+
 # Cleanup any temporary directories and files at termination.
 trap 'cleanup_all' INT TERM
 
+if [ $IS_NAS = "TRUE" ]; then
+    CONF=/etc/config/qpkg.conf
+    QPKG_NAME=qdk
+    QDK_PATH=$(/sbin/getcfg $QPKG_NAME Install_Path -d "" -f $CONF)
+else
+    QDK_PATH="${QDK_PATH:-$(dirname "$(dirname "$(readlink -f "$0")")")}"
+fi
 # Check for deprecated definitions and replace them with new
 # definitions (when applicable).
 check_deprecated_definitions(){
@@ -536,6 +549,8 @@ do_code_signing(){
 create_data_package(){
 	local arch_msg="${1:+ for $1}"
 	local arch_dir="$2"
+	local BUILD_DIR=build.$$
+	local TMP_DIR=tmp.$$
 
 	msg "Creating archive with data files${arch_msg}..."
 
@@ -580,6 +595,16 @@ create_data_package(){
 			debug_msg "[$QDK_COMPRESS_FILE]"
 			debug_msg "$(/bin/tar $tar_verbose -cf - -C build.$$ . | /usr/local/sbin/7z a -si tmp.$$/data.tar.7z)"
 			;;
+		xz)
+			QDK_COMPRESS_FILE=data.tar.xz
+			debug_msg "[$QDK_COMPRESS_FILE]"
+                        if [ $IS_NAS = "TRUE" ]; then
+                            debug_msg "$(tar cf - -C build.$$ . | xz > tmp.$$/${QDK_COMPRESS_FILE})"
+                        else
+			    local SIZE=$(du -sb "${BUILD_DIR}" | grep -o '^[0-9]\+')
+			    debug_msg "$(tar cf - -C ${BUILD_DIR} . | pv -s $SIZE -N tar | xz > ${TMP_DIR}/${QDK_COMPRESS_FILE})"
+                        fi
+			;;
 		*)
 			err_msg "$QDK_COMPRESS_METHOD: unknown compression format"
 	esac
@@ -596,6 +621,19 @@ create_control_package(){
 	/bin/cp -p "$QDK_INSTALL_SCRIPT" build.$$/
 	/bin/cp -p "$QDK_PACKAGE_ROUTINES" build.$$/package_routines
 	/bin/cp -p "$QDK_QPKG_CONFIG" build.$$/qpkg.cfg
+	# cp .nc folder
+	if [ -d "${QDK_DATA_DIR_SHARED:-shared}/.nc" ]; then
+		/bin/cp -fa "${QDK_DATA_DIR_SHARED:-shared}/.nc" build.$$/.nc
+		add_icons
+	fi
+	# xz utility
+	if [ "$QDK_COMPRESS_METHOD" == "xz" ]; then
+            if [ $IS_NAS = "TRUE" ]; then
+		/bin/cp $QDK_PATH/xz_1404_${QDK_XZ_ARCH}.tgz build.$$/xz.tgz
+            else
+		/bin/cp $(dirname $(dirname $(realpath $0)))/xz_1404_${QDK_XZ_ARCH}.tgz build.$$/xz.tgz
+            fi
+	fi
 
 	[ -f tmp.$$/md5sum ] && /bin/cp -p tmp.$$/md5sum build.$$/
 	[ -f tmp.$$/built_version ] && /bin/cp -p tmp.$$/built_version build.$$/
@@ -657,7 +695,7 @@ add_qpkg_header(){
 	# Return value 0 to keep the QPKG package after installation
 	# Return value 10 to remove QPKG package after installation
 	local retval=10
-	local extract_dir="/mnt/HDA_ROOT/update_pkg/tmp"
+	local extract_dir="\$QPKG_INSTALL_PATH/.tmp"
 	local wrong_arch="[$PREFIX] Failed to install $QPKG_DISPLAY_NAME $QPKG_VER. Installation package is incompatible. Use the correct package."
 	local log_tool="/sbin/log_tool -t2 -uSystem -p127.0.0.1 -mlocalhost -a"
 
@@ -804,7 +842,7 @@ add_qpkg_header(){
 
 	/bin/cat >>$QDK_QPKG_FILE <<-EOF
 	find_base
-	[ -z "\$_EXTRACT_DIR" ] && _EXTRACT_DIR="\$QPKG_INSTALL_PATH/.tmp"
+	_EXTRACT_DIR="$extract_dir"
 	/bin/mkdir -p \$_EXTRACT_DIR || exit 1
 	script_len=SCRIPT_LEN
 	/bin/dd if="\${0}" bs=\$script_len skip=1 | /bin/tar -xO | /bin/tar -xzv -C \$_EXTRACT_DIR || exit 1
@@ -1017,9 +1055,15 @@ add_qpkg_tail(){
 
 	verbose_msg "Adding tail data..."
 
+	local max_qpkg_name_len=20
+	local QPKG_NAME_SHORTER=$QPKG_NAME
+	if [ $max_qpkg_name_len -lt ${#QPKG_NAME} ]; then
+		warn_msg "QPKG_NAME: the length of $QPKG_NAME must be less than or equal to $max_qpkg_name_len; name truncated."
+		QPKG_NAME_SHORTER=$(/usr/bin/expr substr "$QPKG_NAME" 1 $max_qpkg_name_len)
+	fi
 	[ -z "$QDK_BUILD_MODEL" ] || _QPKG_MODEL="$QDK_BUILD_MODEL"
 	pad_field _QPKG_MODEL
-	_QPKG_NAME="$QPKG_NAME"
+	_QPKG_NAME="$QPKG_NAME_SHORTER"
 	pad_field _QPKG_NAME 20
 	_QPKG_VERSION="$QPKG_VER"
 	pad_field _QPKG_VERSION
@@ -1194,7 +1238,7 @@ check_missing_config_files(){
 # Check definitions in QPKG configuration file.
 check_mandatory_definitions(){
 	# Source the QPKG configuration file to make all its fields available.
-	. "./$QDK_QPKG_CONFIG" || err_msg "$QDK_QPKG_CONFIG: corrupt configuration file"
+	. "$QDK_QPKG_CONFIG" || err_msg "$QDK_QPKG_CONFIG: corrupt configuration file"
 
 	[ -n "$QPKG_AUTHOR" ] || err_msg "$QDK_QPKG_CONFIG: QPKG_AUTHOR must be assigned a value"
 	[ -n "$QPKG_NAME" ] || err_msg "$QDK_QPKG_CONFIG: QPKG_NAME must be assigned a value"
@@ -1210,7 +1254,7 @@ truncate_qpkg_name(){
 		edit_qpkg_config QPKG_NAME "${QPKG_NAME%% *}"
 	fi
 
-	local max_qpkg_name_len=20
+	local max_qpkg_name_len=40
 	if [ $max_qpkg_name_len -lt ${#QPKG_NAME} ]; then
 		warn_msg "QPKG_NAME: the length of $QPKG_NAME must be less than or equal to $max_qpkg_name_len; name truncated."
 		QPKG_NAME=$(/usr/bin/expr substr "$QPKG_NAME" 1 $max_qpkg_name_len)
@@ -1857,7 +1901,7 @@ usage: $(/usr/bin/basename $0) [--extract QPKG [DIR]] [--create-env NAME] [-s|--
 	[--build-number NUMBER] [--build-model MODEL] [--build-dir BUILD_DIR] [--force-config]
 	[--setup SCRIPT] [--teardown SCRIPT] [--pre-build SCRIPT]
 	[--post-build SCRIPT] [--exclude PATTERN] [--exclude-from FILE]
-	[--gzip|--bzip2|--7zip] [--sign] [--gpg-name ID] [--verify QPKG]
+	[--gzip|--bzip2|--7zip|--xz {amd64|armhf}] [--sign] [--gpg-name ID] [--verify QPKG]
 	[--add-sign QPKG] [--import-key KEY] [--remove-key ID] [--list-keys]
 	[--query OPTION QPKG] [-v|--verbose] [-q|--quiet] [--strict]
 	[--add-code-signing QPKG] [--verify-code-signing QPKG]
@@ -2056,6 +2100,11 @@ main(){
 				;;
 			--bzip2)	QDK_COMPRESS_METHOD="bzip2"
 				;;
+			--xz)	QDK_COMPRESS_METHOD="xz"
+				[ -n "$QDK_COMPRESS_METHOD" ] || err_msg "--xz: no arch"
+				QDK_XZ_ARCH=$2
+				shift
+				;;
 			--create-env)	qbuild_qpkg_name="$2"
 				[ -n "$qbuild_qpkg_name" ] || err_msg "--create-env: no name"
 				shift
@@ -2239,24 +2288,16 @@ main(){
 # System-wide definitions
 
 if [ -f "/etc/config/qdk.conf" ]; then
-	QDK_CONF_FILE="/etc/config/qdk.conf"
-elif [ -f "../qdk.conf" -o -f "./qdk.conf" ]; then
-	echo "You are runing Linux ..."
-	if [ -f "./qdk.conf" ]; then
-		echo "."
-		QDK_CONF_FILE="./qdk.conf"
-	elif [ -f "../qdk.conf" ]; then
-		echo ".."
-		QDK_CONF_FILE="../qdk.conf"
-	else
-		echo "Unknow Environment !!!"
-		QDK_CONF_FILE=""
-	fi
+    QDK_CONF_FILE="/etc/config/qdk.conf"
 else
-	echo "Unknow Environment !!!"
-	QDK_CONF_FILE=""
+    if [ -f "${QDK_PATH}/qdk.conf" ]; then
+        QDK_CONF_FILE="${QDK_PATH}/qdk.conf"
+    elif [ -f "./qdk.conf" ]; then
+        QDK_CONF_FILE="./qdk.conf"
+    else
+        err_msg "qdk.conf: not found"
+    fi
 fi
-[ -n "$QDK_CONF_FILE" ] || err_msg "no QDK_PATH specified in ../qdk.conf or /etc/config/qdk.conf"
 
 . ${QDK_CONF_FILE}
 

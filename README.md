@@ -53,7 +53,7 @@ https://github.com/qnap-dev/qdk2/releases/download/v0.29/qdk2_0.29.bionic_amd64.
 
 # QDK Quick Start Guide
 
-https://www.gitbook.com/book/edhongcy/qdk-quick-start-guide/details
+https://edhongcy.gitbooks.io/qdk-quick-start-guide/content/
 
 # Update new feature
 

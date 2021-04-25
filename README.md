@@ -45,11 +45,11 @@ https://github.com/qeek-dev/create-dpkg
 sudo ./InstallToUbuntu.sh install
 ```
 
-https://github.com/qnap-dev/qdk2/releases/download/v0.29/qdk2_0.29.trusty_amd64.deb
+https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.trusty_amd64.deb
 
-https://github.com/qnap-dev/qdk2/releases/download/v0.29/qdk2_0.29.xenial_amd64.deb
+https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.xenial_amd64.deb
 
-https://github.com/qnap-dev/qdk2/releases/download/v0.29/qdk2_0.29.bionic_amd64.deb
+https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.bionic_amd64.deb
 
 # QDK Quick Start Guide
 

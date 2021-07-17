@@ -5,7 +5,7 @@
 #
 # A QPKG installation script for QDK
 #
-# QDK V.2.3.11
+# QDK V.2.3.12
 #
 # Copyright (C) 2009,2010 QNAP Systems, Inc.
 # Copyright (C) 2010,2011 Michael Nordstrom
@@ -1182,7 +1182,11 @@ check_requirements(){
 				is_qpkg_enabled "$qpkg" $op $version && break
 				statusOK="FALSE"
 			done
-			[ "$statusOK" = "TRUE" ] || if [ -x "/usr/local/sbin/notify" ]; then /usr/local/sbin/notify send -A A039 -C C001 -M 44 -l error -t 3 "[{0}] {1} {2} install failed. The following QPKG must be installed and enabled: {3}." "$PREFIX" "$QPKG_DISPLAY_NAME" "$QPKG_VER" "$QPKG_REQUIRE"; set_progress_fail;exit 1;else err_log "[$PREFIX] Failed to install $QPKG_DISPLAY_NAME $QPKG_VER. You must first install and enable $QPKG_REQUIRE.";fi
+			if [ -n "$QPKG_REQUIRE_MSG" ]; then
+				[ "$statusOK" = "TRUE" ] || if [ -x "/usr/local/sbin/notify" ]; then /usr/local/sbin/notify send -A A039 -C C001 -M 44 -l error -t 3 "[{0}] {1} {2} install failed. The following QPKG must be installed and enabled: {3}." "$PREFIX" "$QPKG_DISPLAY_NAME" "$QPKG_VER" "$QPKG_REQUIRE_MSG"; set_progress_fail;exit 1;else err_log "[$PREFIX] Failed to install $QPKG_DISPLAY_NAME $QPKG_VER. You must first install and enable $QPKG_REQUIRE_MSG.";fi
+			else
+				[ "$statusOK" = "TRUE" ] || if [ -x "/usr/local/sbin/notify" ]; then /usr/local/sbin/notify send -A A039 -C C001 -M 44 -l error -t 3 "[{0}] {1} {2} install failed. The following QPKG must be installed and enabled: {3}." "$PREFIX" "$QPKG_DISPLAY_NAME" "$QPKG_VER" "$QPKG_REQUIRE"; set_progress_fail;exit 1;else err_log "[$PREFIX] Failed to install $QPKG_DISPLAY_NAME $QPKG_VER. You must first install and enable $QPKG_REQUIRE.";fi
+			fi
 		done
 	fi
 	if [ -n "$QPKG_CONFLICT" ]; then

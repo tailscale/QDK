@@ -56,7 +56,7 @@ https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.bionic_amd64.
 https://cheng-yuan-hong.gitbook.io/qdk-quick-start-guide/
 
 # Update new feature
-2.3.20
+2.3.12
 
     -Add QPKG_REQUIRE_MSG option in qpkg.cfg
 

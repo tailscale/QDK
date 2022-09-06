@@ -3,7 +3,7 @@ The project is fork qnap SDK 2.2.4
 
 # QDK Download Link:
 
-https://github.com/qnap-dev/QDK/releases/download/v2.3.12/QDK_2.3.12.zip
+https://github.com/qnap-dev/QDK/releases/download/v2.3.13/QDK_2.3.13.zip
 
 # QPKG Development Guidelines
 ----------------------------------
@@ -56,6 +56,10 @@ https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.bionic_amd64.
 https://cheng-yuan-hong.gitbook.io/qdk-quick-start-guide/
 
 # Update new feature
+2.3.13
+
+    -Add QPKG_FORCE_VISIBLE option in qpkg.cfg
+
 2.3.12
 
     -Add QPKG_REQUIRE_MSG option in qpkg.cfg

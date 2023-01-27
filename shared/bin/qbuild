@@ -1452,6 +1452,7 @@ query_qpkg(){
 	local output=
 	if [ "$option" = "funcs" ]; then
 		dd_command=$(/bin/sed -n "1,/^exit 1/{
+s!if=\"\${0}\" \(.*\)\(xz\?\)v -C .*!$dd_quiet if=$qpkg \1\2 -O --no-anchor package_routines!p
 s!if=\${0} \(.*\)\(xz\?\)v -C .*!$dd_quiet if=$qpkg \1\2 -O --no-anchor package_routines!p
 s/^script_len.*/&;/p
 /^exit 1/q
@@ -1461,6 +1462,7 @@ s/^script_len.*/&;/p
 		output="$(eval $dd_command)"
 	else
 		dd_command=$(/bin/sed -n "1,/^exit 1/{
+s!if=\"\${0}\" \(.*\)\(xz\?\)v -C .*!$dd_quiet if=$qpkg \1\2 -O --no-anchor qpkg.cfg!p
 s!if=\${0} \(.*\)\(xz\?\)v -C .*!$dd_quiet if=$qpkg \1\2 -O --no-anchor qpkg.cfg!p
 s/^script_len.*/&;/p
 /^exit 1/q

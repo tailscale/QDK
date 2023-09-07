@@ -986,20 +986,46 @@ add_qpkg_signature(){
 			warn_msg "Will not create code signing digital signature because certificate is missing"
 		elif [ -f "certificate" ]; then
 			warn_msg "Will not create code signing digital signature because private key is missing"
+		elif [ -f "certificate_hsm" ]; then
+			DO_CODE_SIGNING_OFFLINE_HSM="TRUE"
 		fi
 
 		if [ "$DO_CODE_SIGNING_OFFLINE" = "TRUE" ] && [ "$QDK_SIGN" = "TRUE" ]; then
 			err_msg "Can not sign QPKG using QNAP certificate and gpg key at same time"
-		elif [ "$DO_CODE_SIGNING_OFFLINE" = "TRUE" ]; then
-			verbose_msg "Creating code signing digital signature..."
+	    elif [ "$DO_CODE_SIGNING_OFFLINE_HSM" = "TRUE" ] && [ "$QDK_SIGN" = "TRUE" ]; then
+			err_msg "Can not sign QPKG using QNAP certificate and gpg key at same time"
+		elif [ "$DO_CODE_SIGNING_OFFLINE_HSM" = "TRUE" ] || [ "$DO_CODE_SIGNING_OFFLINE" = "TRUE" ]; then
 			openssl dgst -sha1 -binary "${QDK_QPKG_FILE}" > "${QDK_QPKG_FILE}.sha"
-			if [ -f "ca_certs" ]; then
-				openssl cms -sign -in "${QDK_QPKG_FILE}.sha" -binary -nodetach -out "${QDK_QPKG_FILE}.msg" \
-				-signer certificate -inkey private_key \
-				-certfile ca_certs 2>/dev/null
+			if [ "$DO_CODE_SIGNING_OFFLINE_HSM" = "TRUE" ]; then
+				msg "Creating code signing digital signature using HSM..."
+				if [ "x${HSM_SLOT}" = "x" ]; then
+					HSM_SLOT="0"
+				fi
+				if [ "x${HSM_KEY_ID}" != "x" ]; then
+					INKEY="$HSM_SLOT:$HSM_KEY_ID"
+				elif [ "x${HSM_KEY_LABEL}" != "x" ]; then
+					INKEY="slot_${HSM_SLOT}-label_${HSM_KEY_LABEL}"
+				else
+					err_msg "Need to set at least HSM_KEY_ID or HSM_KEY_LABEL environment variable while using HSM"
+				fi
+				if [ -f "ca_certs_hsm" ]; then
+					openssl cms -engine pkcs11 -keyform engine -sign -in "${QDK_QPKG_FILE}.sha" -binary -nodetach -out "${QDK_QPKG_FILE}.msg" \
+						-signer certificate_hsm -inkey "${INKEY}" \
+						-certfile ca_certs_hsm 2>/dev/null
+				else
+					openssl cms -engine pkcs11 -keyform engine -sign -in "${QDK_QPKG_FILE}.sha" -binary -nodetach -out "${QDK_QPKG_FILE}.msg" \
+						-signer certificate_hsm -inkey "${INKEY}" 2>/dev/null
+				fi
 			else
-				openssl cms -sign -in "${QDK_QPKG_FILE}.sha" -binary -nodetach -out "${QDK_QPKG_FILE}.msg" \
-					-signer certificate -inkey private_key 2>/dev/null
+				verbose_msg "Creating code signing digital signature..."
+				if [ -f "ca_certs" ]; then
+					openssl cms -sign -in "${QDK_QPKG_FILE}.sha" -binary -nodetach -out "${QDK_QPKG_FILE}.msg" \
+						-signer certificate -inkey private_key \
+						-certfile ca_certs 2>/dev/null
+				else
+					openssl cms -sign -in "${QDK_QPKG_FILE}.sha" -binary -nodetach -out "${QDK_QPKG_FILE}.msg" \
+						-signer certificate -inkey private_key 2>/dev/null
+				fi
 			fi
 			local err_code=$?
 			if [ $err_code = "2" ]; then
@@ -1115,7 +1141,7 @@ create_qpkg(){
 	add_qpkg_encryption
 
 	local ret=0
-	if [ "x${QNAP_CODE_SIGNING}" = "x1" ] || [ "$DO_CODE_SIGNING_OFFLINE" = "TRUE" ] ; then
+	if [ "x${QNAP_CODE_SIGNING}" = "x1" ] || [ "$DO_CODE_SIGNING_OFFLINE" = "TRUE" ] || [ "$DO_CODE_SIGNING_OFFLINE_HSM" = "TRUE" ] ; then
 		verify_code_signing ${QDK_QPKG_FILE}
 		ret=$?
 	fi

@@ -695,7 +695,7 @@ add_qpkg_header(){
 	# Return value 0 to keep the QPKG package after installation
 	# Return value 10 to remove QPKG package after installation
 	local retval=10
-	local extract_dir="\$QPKG_INSTALL_PATH/.tmp"
+	local extract_dir="\$QPKG_INSTALL_PATH/.tmp-${QPKG_NAME}"
 	local wrong_arch="[$PREFIX] Failed to install $QPKG_DISPLAY_NAME $QPKG_VER. Installation package is incompatible. Use the correct package."
 	local log_tool="/sbin/log_tool -t2 -uSystem -p127.0.0.1 -mlocalhost -a"
 

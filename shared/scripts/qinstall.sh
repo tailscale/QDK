@@ -5,7 +5,7 @@
 #
 # A QPKG installation script for QDK
 #
-# QDK V.2.3.13
+# QDK V.2.3.14
 #
 # Copyright (C) 2009,2010 QNAP Systems, Inc.
 # Copyright (C) 2010,2011 Michael Nordstrom
@@ -858,7 +858,7 @@ set_qpkg_enter_readdelete_action(){
 }
 
 set_qpkg_leave_readdelete_action(){
-	if [ -n "$QPKG_ENTER_READDELETE_ACTION" ]; then
+	if [ -n "$QPKG_LEAVE_READDELETE_ACTION" ]; then
     	set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_READDELETE_ACTION "$QPKG_LEAVE_READDELETE_ACTION"
 	fi
 }
@@ -870,26 +870,26 @@ set_qpkg_action_timeout(){
 }
 
 set_qpkg_enter_hero_low_space(){
-	if [ -n "$QPKG_ACTION_ENTER_HERO_LOW_SPACE" ]; then
-                set_qpkg_field $SYS_QPKG_CONF_FIELD_ENTER_HERO_LOW_SPACE "$QPKG_ENTER_HERO_LOW_SPACE"
+	if [ -n "$QPKG_ENTER_HERO_LOW_SPACE_ACTION" ]; then
+                set_qpkg_field $SYS_QPKG_CONF_FIELD_ENTER_HERO_LOW_SPACE "$QPKG_ENTER_HERO_LOW_SPACE_ACTION"
         fi
 }
 
 set_qpkg_leave_hero_low_space(){
-	if [ -n "$QPKG_LEAVE_HERO_LOW_SPACE" ]; then
-		set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_HERO_LOW_SPACE "$QPKG_LEAVE_HERO_LOW_SPACE"
+	if [ -n "$QPKG_LEAVE_HERO_LOW_SPACE_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_HERO_LOW_SPACE "$QPKG_LEAVE_HERO_LOW_SPACE_ACTION"
 	fi
 }
 
 set_qpkg_enter_hero_critical_low(){
-	if [ -n "$QPKG_ACTION_ENTER_HERO_CRITICAL_LOW" ]; then
-		set_qpkg_field $SYS_QPKG_CONF_FIELD_ENTER_HERO_CRITICAL_LOW "$QPKG_ENTER_HERO_CRITICAL_LOW"
+	if [ -n "$QPKG_ENTER_HERO_CRITICAL_LOW_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_ENTER_HERO_CRITICAL_LOW "$QPKG_ENTER_HERO_CRITICAL_LOW_ACTION"
 	fi
 }
 
 set_qpkg_leave_hero_critical_low(){
-	if [ -n "$QPKG_LEAVE_HERO_CRITICAL_LOW" ]; then
-		set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_HERO_CRITICAL_LOW "$QPKG_LEAVE_HERO_CRITICAL_LOW"
+	if [ -n "$QPKG_LEAVE_HERO_CRITICAL_LOW_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_HERO_CRITICAL_LOW "$QPKG_LEAVE_HERO_CRITICAL_LOW_ACTION"
 	fi
 }
 

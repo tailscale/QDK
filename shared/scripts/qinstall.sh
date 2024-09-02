@@ -5,7 +5,7 @@
 #
 # A QPKG installation script for QDK
 #
-# QDK V.2.3.13
+# QDK V.2.3.14
 #
 # Copyright (C) 2009,2010 QNAP Systems, Inc.
 # Copyright (C) 2010,2011 Michael Nordstrom
@@ -110,6 +110,17 @@ SYS_QPKG_CONF_FIELD_CONTAINER="Container"
 SYS_QPKG_CONF_FIELD_EXEC_FILES="Exec_Files"
 SYS_QPKG_CONF_FIELD_FW_VER_MIN="FW_Ver_Min"
 SYS_QPKG_CONF_FIELD_FW_VER_MAX="FW_Ver_Max"
+SYS_QPKG_CONF_FIELD_MOUNT_ACTION="Mount_Action"
+SYS_QPKG_CONF_FIELD_UNMOUNT_ACTION="Unmount_Action"
+SYS_QPKG_CONF_FIELD_SHARE_ADD_ACTION="Share_Add_Action"
+SYS_QPKG_CONF_FIELD_SHARE_DEL_ACTION="Share_Del_Action"
+SYS_QPKG_CONF_FIELD_ENTER_READDELETE_ACTION="Enter_ReadDelete_Action"
+SYS_QPKG_CONF_FIELD_LEAVE_READDELETE_ACTION="Leave_ReadDelete_Action"
+SYS_QPKG_CONF_FIELD_ACTION_TIMEOUT="Action_Timeout"
+SYS_QPKG_CONF_FIELD_ENTER_HERO_LOW_SPACE="Enter_Hero_Low_space"
+SYS_QPKG_CONF_FIELD_LEAVE_HERO_LOW_SPACE="Leave_Hero_Low_space"
+SYS_QPKG_CONF_FIELD_ENTER_HERO_CRITICAL_LOW="Enter_Hero_Critical_Low"
+SYS_QPKG_CONF_FIELD_LEAVE_HERO_CRITICAL_LOW="Leave_Hero_Critical_Low"
 PREFIX="App Center"
 # The following variables are assigned values at run-time.
 SYS_HOSTNAME=$($CMD_HOSTNAME)
@@ -816,7 +827,71 @@ set_qpkg_fw_ver_max(){
 		set_qpkg_field $SYS_QPKG_CONF_FIELD_FW_VER_MAX "$QTS_MAX_VERSION"
 	fi
 }
+set_qpkg_mount_action(){
+	if [ -n "$QPKG_MOUNT_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_MOUNT_ACTION "$QPKG_MOUNT_ACTION"
+	fi
+}
 
+set_qpkg_unmount_action(){
+	if [ -n "$QPKG_UNMOUNT_ACTION" ]; then
+    	set_qpkg_field $SYS_QPKG_CONF_FIELD_UNMOUNT_ACTION "$QPKG_UNMOUNT_ACTION"
+	fi
+}
+
+set_qpkg_share_add_action(){
+	if [ -n "$QPKG_SHARE_ADD_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_SHARE_ADD_ACTION "$QPKG_SHARE_ADD_ACTION"
+	fi
+}
+
+set_qpkg_share_del_action(){
+	if [ -n "$QPKG_SHARE_DEL_ACTION" ]; then
+    	set_qpkg_field $SYS_QPKG_CONF_FIELD_SHARE_DEL_ACTION "$QPKG_SHARE_DEL_ACTION"
+	fi
+}
+
+set_qpkg_enter_readdelete_action(){
+	if [ -n "$QPKG_ENTER_READDELETE_ACTION" ]; then
+    	set_qpkg_field $SYS_QPKG_CONF_FIELD_ENTER_READDELETE_ACTION "$QPKG_ENTER_READDELETE_ACTION"
+	fi
+}
+
+set_qpkg_leave_readdelete_action(){
+	if [ -n "$QPKG_LEAVE_READDELETE_ACTION" ]; then
+    	set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_READDELETE_ACTION "$QPKG_LEAVE_READDELETE_ACTION"
+	fi
+}
+
+set_qpkg_action_timeout(){
+	if [ -n "$QPKG_ACTION_TIMEOUT" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_ACTION_TIMEOUT "$QPKG_ACTION_TIMEOUT"
+	fi
+}
+
+set_qpkg_enter_hero_low_space(){
+	if [ -n "$QPKG_ENTER_HERO_LOW_SPACE_ACTION" ]; then
+                set_qpkg_field $SYS_QPKG_CONF_FIELD_ENTER_HERO_LOW_SPACE "$QPKG_ENTER_HERO_LOW_SPACE_ACTION"
+        fi
+}
+
+set_qpkg_leave_hero_low_space(){
+	if [ -n "$QPKG_LEAVE_HERO_LOW_SPACE_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_HERO_LOW_SPACE "$QPKG_LEAVE_HERO_LOW_SPACE_ACTION"
+	fi
+}
+
+set_qpkg_enter_hero_critical_low(){
+	if [ -n "$QPKG_ENTER_HERO_CRITICAL_LOW_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_ENTER_HERO_CRITICAL_LOW "$QPKG_ENTER_HERO_CRITICAL_LOW_ACTION"
+	fi
+}
+
+set_qpkg_leave_hero_critical_low(){
+	if [ -n "$QPKG_LEAVE_HERO_CRITICAL_LOW_ACTION" ]; then
+		set_qpkg_field $SYS_QPKG_CONF_FIELD_LEAVE_HERO_CRITICAL_LOW "$QPKG_LEAVE_HERO_CRITICAL_LOW_ACTION"
+	fi
+}
 
 ############################################################
 # Store the current status of the QPKG to be able to
@@ -860,6 +935,17 @@ register_qpkg(){
 	set_qpkg_exec_file
 	set_qpkg_fw_ver_min
 	set_qpkg_fw_ver_max
+	set_qpkg_mount_action
+	set_qpkg_unmount_action
+	set_qpkg_share_add_action
+	set_qpkg_share_del_action
+	set_qpkg_enter_readdelete_action
+	set_qpkg_leave_readdelete_action
+	set_qpkg_action_timeout
+	set_qpkg_enter_hero_low_space
+	set_qpkg_leave_hero_low_space
+	set_qpkg_enter_hero_critical_low
+	set_qpkg_leave_hero_critical_low
 }
 
 ##################

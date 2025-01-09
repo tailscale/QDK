@@ -1,10 +1,6 @@
 # QDK
 The project is fork qnap SDK 2.2.4
 
-# QDK Download Link:
-
-https://github.com/qnap-dev/QDK/releases/download/v2.3.13/QDK_2.3.13.zip
-
 # QPKG Development Guidelines
 ----------------------------------
 
@@ -32,24 +28,11 @@ The value must be a full path or a path relative to $QDK_ROOT_DIR. The icons sha
 
 * ${QPKG_NAME}_80.gif is the image displayed in the pop-up dialog (with information about the QPKG and the buttons to enable, disable, and remove). It should be a GIF image of 80x80 pixels. If no icons are included then the QPKG is given default icons at installation.
 
-
-# How to create QPKG in docker 
-  
-https://github.com/fcwu/docker-qdk2
-
-https://github.com/qeek-dev/create-dpkg
-
 # How to install QDK on Ubuntu
 
 ```
 sudo ./InstallToUbuntu.sh install
 ```
-
-https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.trusty_amd64.deb
-
-https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.xenial_amd64.deb
-
-https://github.com/qnap-dev/qdk2/releases/download/v0.30/qdk2_0.30.bionic_amd64.deb
 
 # QDK Quick Start Guide
 

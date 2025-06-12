@@ -39,6 +39,12 @@ sudo ./InstallToUbuntu.sh install
 https://cheng-yuan-hong.gitbook.io/qdk-quick-start-guide/
 
 # Update new feature
+
+2.3.14
+
+    - Add HSM (USB Token) support while doing QNAP code signing
+    - Add QTS Hero option in qpkg.cfg
+
 2.3.13
 
     -Add QPKG_FORCE_VISIBLE option in qpkg.cfg

@@ -1685,9 +1685,17 @@ add_code_signing(){
 			QNAP_CODE_SIGNING_SERVER_PORT="5001"
 		fi
 	else
+		if [ "x${QNAP_CERT}" = "x" ] && [ "x${QNAP_CERT_HSM}" = "x" ]; then
+			err_msg "$code_signing_cfg: Certificate file is not defined"
+		fi
 		# 3rd party, not connected to server, sign using local certificate and private key
-		[ -f "$QNAP_CERT" ] || err_msg "$code_signing_cfg: QNAP_CERT $QNAP_CERT cannot be found"
-		[ -f "$PRIVATE_KEY" ] || err_msg "$code_signing_cfg: PRIVATE_KEY $PRIVATE_KEY cannot be found"
+		if [ ! -f "${QNAP_CERT}" ] && [ ! -f "${QNAP_CERT_HSM}" ]; then
+			err_msg "$code_signing_cfg: Certificate file cannot be found"
+		elif [ -f "${QNAP_CERT}" ]; then
+			[ -f "$PRIVATE_KEY" ] || err_msg "$code_signing_cfg: PRIVATE_KEY $PRIVATE_KEY cannot be found"
+		elif [ -f "${QNAP_CERT_HSM}" ]; then
+			DO_CODE_SIGNING_OFFLINE_HSM="TRUE"
+		fi
 	fi
 
 	local qpkg_data_file="${qpkg}.data"
@@ -1711,14 +1719,36 @@ add_code_signing(){
 		$CS_PYTHON "${QDK_SCRIPTS_DIR}/codesigning_qpkg_cms.py" server=${QNAP_CODE_SIGNING_SERVER_IP}:${QNAP_CODE_SIGNING_SERVER_PORT} qpkgname=${QPKG_NAME} version=${QPKG_VER} in="${qpkg}.sha" out="${qpkg}.msg" 2>&1 | tee -a code_signing.log
 	else
 		# 3rd party, not connected to server, sign using local certificate and private key
-		verbose_msg "Creating code signing digital signature..."
-		if [ -f "${CA_CERTS}" ]; then
-			openssl cms -sign -in "${qpkg}.sha" -binary -nodetach -out "${qpkg}.msg" \
-				-signer ${QNAP_CERT} -inkey ${PRIVATE_KEY} \
-				-certfile ${CA_CERTS} 2>/dev/null
+		if [ "$DO_CODE_SIGNING_OFFLINE_HSM" = "TRUE" ]; then
+			msg "Creating code signing digital signature using HSM..."
+			if [ "x${HSM_SLOT}" = "x" ]; then
+				HSM_SLOT="0"
+			fi
+			if [ "x${HSM_KEY_ID}" != "x" ]; then
+				INKEY="$HSM_SLOT:$HSM_KEY_ID"
+			elif [ "x${HSM_KEY_LABEL}" != "x" ]; then
+				INKEY="slot_${HSM_SLOT}-label_${HSM_KEY_LABEL}"
+			else
+				err_msg "Need to set at least HSM_KEY_ID or HSM_KEY_LABEL environment variable while using HSM"
+			fi
+			if [ "x${CA_CERTS_HSM}" != "x" ] && [ -f "${CA_CERTS_HSM}" ]; then
+				openssl cms -engine pkcs11 -keyform engine -sign -in "${qpkg}.sha" -binary -nodetach -out "${qpkg}.msg" \
+					-signer "${QNAP_CERT_HSM}" -inkey "${INKEY}" \
+					-certfile "${CA_CERTS_HSM}" 2>>"qnap_hsm.log"
+			else
+				openssl cms -engine pkcs11 -keyform engine -sign -in "${qpkg}.sha" -binary -nodetach -out "${qpkg}.msg" \
+					-signer "${QNAP_CERT_HSM}" -inkey "${INKEY}" 2>>"qnap_hsm.log"
+			fi
 		else
-			openssl cms -sign -in "${qpkg}.sha" -binary -nodetach -out "${qpkg}.msg" \
-				-signer ${QNAP_CERT} -inkey ${PRIVATE_KEY} 2>/dev/null
+			verbose_msg "Creating code signing digital signature..."
+			if [ -f "${CA_CERTS}" ]; then
+				openssl cms -sign -in "${qpkg}.sha" -binary -nodetach -out "${qpkg}.msg" \
+					-signer ${QNAP_CERT} -inkey ${PRIVATE_KEY} \
+					-certfile ${CA_CERTS} 2>/dev/null
+			else
+				openssl cms -sign -in "${qpkg}.sha" -binary -nodetach -out "${qpkg}.msg" \
+					-signer ${QNAP_CERT} -inkey ${PRIVATE_KEY} 2>/dev/null
+			fi
 		fi
 		local err_code=$?
 		if [ $err_code = "2" ]; then
@@ -1746,7 +1776,11 @@ add_code_signing(){
 
 	verbose_msg "Add tail data..."
 	printf "$(/usr/bin/tail -c$TAIL_DATA_LEN $qpkg)" >> ${qpkg}.$$
-	verbose_msg "Adding QPKG checksum: $(/sbin/qpkg --encrypt ${qpkg}.$$)"
+	if [ -x "/sbin/qpkg" ]; then
+		verbose_msg "Adding QPKG checksum: $(/sbin/qpkg --encrypt ${qpkg}.$$)"
+	else
+		verbose_msg "Adding QPKG checksum: $(qpkg_encrypt ${qpkg}.$$)"
+	fi
 	/bin/mv ${qpkg}.$$ $qpkg
 
 	md5sum $qpkg > $qpkg.md5

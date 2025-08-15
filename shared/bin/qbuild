@@ -1164,7 +1164,7 @@ create_qpkg(){
 	add_qpkg_encryption
 
 	local ret=0
-	if [ "x${QNAP_CODE_SIGNING}" = "x1" ] || [ "$DO_CODE_SIGNING_OFFLINE" = "TRUE" ] || [ "$DO_CODE_SIGNING_OFFLINE_HSM" = "TRUE" ] ; then
+	if [ "x${QNAP_CODE_SIGNING}" = "x1" ] || [ "$DO_CODE_SIGNING_OFFLINE" = "TRUE" ] || [ "$DO_CODE_SIGNING_OFFLINE_HSM" = "TRUE" ] || [ -n "${QNAP_SIGNING_SCRIPT}" ]; then
 		verify_code_signing ${QDK_QPKG_FILE}
 		ret=$?
 	fi
